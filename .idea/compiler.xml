@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Gradle Imported" enabled="true">
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/dev.hypera/chameleon-annotations/0.15.0-SNAPSHOT/dc5b513523fadf7847fcc862174a8b8cd4dfc8ae/chameleon-annotations-0.15.0-SNAPSHOT.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.projectlombok/lombok/1.18.28/a2ff5da8bcd8b1b26f36b806ced63213362c6dcc/lombok-1.18.28.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/dev.hypera/chameleon-api/0.15.0-SNAPSHOT/b8c89f061e55277ceb4e2a0e07259e84447f2444/chameleon-api-0.15.0-SNAPSHOT.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.squareup/javapoet/1.13.0/d6562d385049f35eb50403fa86bb11cce76b866a/javapoet-1.13.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.yaml/snakeyaml/2.0/3aab2116756442bf0d4cd1c089b24d34c3baa253/snakeyaml-2.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/adventure-text-serializer-legacy/4.13.0/7d19c74d574e5a0fba65668f562c9f767132fd35/adventure-text-serializer-legacy-4.13.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/adventure-platform-api/4.3.0/50847f49cb181fdafd0de37459bbe0fb8b1eb972/adventure-platform-api-4.3.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/adventure-api/4.13.0/8c96bc2c4dd2f412446d327522b42525e484fb29/adventure-api-4.13.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/adventure-key/4.13.0/ddf8a8faf13659c087850bf0d633e24f47423255/adventure-key-4.13.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/adventure-text-serializer-gson/4.13.0/58d60201aa67094fc1afa512f35de5dd0059c61e/adventure-text-serializer-gson-4.13.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.google.code.gson/gson/2.10.1/b3add478d4382b78ea20b1671390a858002feb6c/gson-2.10.1.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/examination-string/1.3.0/6f34afef5c54ccce4996bc321abf77518b55b4bd/examination-string-1.3.0.jar" />
+          <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/examination-api/1.3.0/8a2d185275307f1e2ef2adf7152b9a0d1d44c30b/examination-api-1.3.0.jar" />
+        </processorPath>
+        <module name="CoinsAPI.main" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel target="17" />
+  </component>
+</project>
