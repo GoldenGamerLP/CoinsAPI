@@ -39,7 +39,7 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
 
             //Create user if needed
             if (coinUser.isEmpty()) {
-                CoinUser newUser = new UserImpl(user.getId(), 0L, user.getName(),0D);
+                CoinUser newUser = new UserImpl(user.getId(), 0L, user.getName(), 0D);
                 dao.saveUser(newUser);
             }
 

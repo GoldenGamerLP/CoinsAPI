@@ -56,7 +56,21 @@ public class UserCache implements CoinUserDAO {
         if (user != null) return Optional.of(user);
 
         Optional<CoinUser> optional = mongoDB.getUser(uuid);
-        optional.ifPresent(value -> cache.put(uuid, value));
+        optional.ifPresent(value -> cache.put(value.getUniqueId(), value));
+        return optional;
+    }
+
+    @Override
+    public Optional<CoinUser> getUser(String name) {
+        CoinUser user = cache.asMap().values().stream()
+                .filter(User -> User.getLastKnownName().equals(name))
+                .findFirst()
+                .orElse(null);
+
+        if (user != null) return Optional.of(user);
+
+        Optional<CoinUser> optional = mongoDB.getUser(name);
+        optional.ifPresent(value -> cache.put(value.getUniqueId(), value));
         return optional;
     }
 
@@ -78,5 +92,10 @@ public class UserCache implements CoinUserDAO {
     @Override
     public CompletableFuture<Optional<CoinUser>> getUserAsync(UUID uuid) {
         return mongoDB.getUserAsync(uuid);
+    }
+
+    @Override
+    public CompletableFuture<Optional<CoinUser>> getUserAsync(String name) {
+        return mongoDB.getUserAsync(name);
     }
 }

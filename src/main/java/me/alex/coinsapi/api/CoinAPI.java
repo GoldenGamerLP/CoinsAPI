@@ -31,6 +31,20 @@ public interface CoinAPI {
     }
 
     /**
+     * Gets the CoinUser from the CoinUserDAO. If none is found, it will return null.
+     * This method is not recommended to use, as it is blocking. Use the async method instead.
+     *
+     * @param name The name of the player
+     * @return CoinUser
+     * @see CoinUserDAO#getUserAsync(String)
+     */
+    @Nullable
+    @Blocking
+    default CoinUser getUser(String name) {
+        return getDatabase().getUser(name).orElse(null);
+    }
+
+    /**
      * Checks if the user exists in the database.
      *
      * @param uuid The UUID of the player

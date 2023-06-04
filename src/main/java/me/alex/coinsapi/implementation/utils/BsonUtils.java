@@ -38,4 +38,10 @@ public class BsonUtils {
     public static Bson filterForUUID(UUID uuid) {
         return Filters.eq("uuid", uuid);
     }
+
+    @NotNull
+    @Contract(value = "_ -> new", pure = true)
+    public static Bson filterForName(String name) {
+        return Filters.eq("lastKnownName", name);
+    }
 }

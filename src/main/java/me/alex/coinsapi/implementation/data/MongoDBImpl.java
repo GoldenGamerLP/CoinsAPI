@@ -68,24 +68,31 @@ public class MongoDBImpl implements CoinUserDAO {
 
     @Override
     public boolean saveUser(CoinUser user) {
-        if (hasUser(user.getUniqueId())) {
-            collection.insertOne(BsonUtils.toBson(user));
-        } else collection.findOneAndReplace(
+        boolean exists = hasUser(user.getUniqueId()), wasSuccessful;
+        if (exists) {
+            wasSuccessful = collection.insertOne(BsonUtils.toBson(user)).wasAcknowledged();
+        } else wasSuccessful = collection.replaceOne(
                 BsonUtils.filterForUUID(user.getUniqueId()),
-                BsonUtils.toBson(user));
+                BsonUtils.toBson(user)).getModifiedCount() == 1;
 
-        return true;
+        return wasSuccessful;
     }
 
     @Override
     public boolean deleteUser(CoinUser user) {
-        collection.findOneAndDelete(BsonUtils.filterForUUID(user.getUniqueId()));
-        return true;
+        return collection.deleteOne(BsonUtils.filterForUUID(user.getUniqueId())).wasAcknowledged();
     }
 
     @Override
     public Optional<CoinUser> getUser(UUID uuid) {
         Document document = collection.find(BsonUtils.filterForUUID(uuid)).first();
+        if (document == null) return Optional.empty();
+        return Optional.of(BsonUtils.fromBson(document.toBsonDocument()));
+    }
+
+    @Override
+    public Optional<CoinUser> getUser(String name) {
+        Document document = collection.find(BsonUtils.filterForName(name)).first();
         if (document == null) return Optional.empty();
         return Optional.of(BsonUtils.fromBson(document.toBsonDocument()));
     }
@@ -108,6 +115,11 @@ public class MongoDBImpl implements CoinUserDAO {
     @Override
     public CompletableFuture<Optional<CoinUser>> getUserAsync(UUID uuid) {
         return CompletableFuture.supplyAsync(() -> getUser(uuid));
+    }
+
+    @Override
+    public CompletableFuture<Optional<CoinUser>> getUserAsync(String name) {
+        return CompletableFuture.supplyAsync(() -> getUser(name));
     }
 
 }

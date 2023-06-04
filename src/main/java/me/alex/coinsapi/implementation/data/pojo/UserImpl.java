@@ -2,7 +2,6 @@ package me.alex.coinsapi.implementation.data.pojo;
 
 import lombok.Data;
 import lombok.Getter;
-import lombok.Setter;
 import me.alex.coinsapi.api.CoinUser;
 
 import java.util.UUID;
@@ -40,7 +39,7 @@ public class UserImpl implements CoinUser {
 
     @Override
     public void addCoins(Long coins) {
-        this.coins += coins;
+        this.coins += Math.round(coins * multiplier);
     }
 
     @Override

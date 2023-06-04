@@ -7,7 +7,6 @@ import dev.dejvokep.boostedyaml.settings.general.GeneralSettings;
 import dev.dejvokep.boostedyaml.settings.loader.LoaderSettings;
 import dev.dejvokep.boostedyaml.settings.updater.UpdaterSettings;
 import dev.hypera.chameleon.Chameleon;
-import dev.hypera.chameleon.logger.ChameleonLogger;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import me.alex.coinsapi.implementation.CoinsAPI;
