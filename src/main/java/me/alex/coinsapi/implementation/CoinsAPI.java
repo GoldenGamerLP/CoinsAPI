@@ -30,28 +30,28 @@ import org.jetbrains.annotations.NotNull;
 public class CoinsAPI extends ChameleonPlugin {
 
     @Getter
-    private final Chameleon chameleon;
+    private Chameleon chameleon;
     @Getter
-    private final DefaultConfiguration configuration;
+    private DefaultConfiguration configuration;
     @Getter
-    private final MongoDBImpl database;
+    private MongoDBImpl database;
     @Getter
     private UserCache userCache;
 
-    protected CoinsAPI(@NotNull Chameleon chameleon) {
+    public CoinsAPI(@NotNull Chameleon chameleon) {
         super(chameleon);
 
         this.chameleon = chameleon;
-        this.configuration = new DefaultConfiguration(this);
-        this.database = new MongoDBImpl(this);
-
     }
 
     @Override
     public void onLoad() {
         log.info("Loading CoinsAPI");
+        this.configuration = new DefaultConfiguration(this);
+
         this.configuration.load();
         log.info("Connecting to database");
+        this.database = new MongoDBImpl(this);
         this.database.connect();
     }
 

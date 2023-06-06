@@ -12,6 +12,7 @@ import me.alex.coinsapi.api.CoinUserDAO;
 import me.alex.coinsapi.implementation.CoinsAPI;
 import me.alex.coinsapi.implementation.utils.BsonUtils;
 import org.bson.Document;
+import org.bson.UuidRepresentation;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -40,6 +41,7 @@ public class MongoDBImpl implements CoinUserDAO {
         settings = MongoClientSettings.builder()
                 .applyConnectionString(new ConnectionString(uri))
                 .serverApi(serverApi)
+                .uuidRepresentation(UuidRepresentation.STANDARD)
                 .build();
 
     }
@@ -69,12 +71,13 @@ public class MongoDBImpl implements CoinUserDAO {
     @Override
     public boolean saveUser(CoinUser user) {
         boolean exists = hasUser(user.getUniqueId()), wasSuccessful;
-        if (exists) {
-            wasSuccessful = collection.insertOne(BsonUtils.toBson(user)).wasAcknowledged();
+        if (!exists) {
+            wasSuccessful = collection.insertOne(BsonUtils.toBson(user)).getInsertedId() != null;
         } else wasSuccessful = collection.replaceOne(
                 BsonUtils.filterForUUID(user.getUniqueId()),
                 BsonUtils.toBson(user)).getModifiedCount() == 1;
 
+        System.out.println("" + wasSuccessful + " " + user.getUniqueId() + exists);
         return wasSuccessful;
     }
 

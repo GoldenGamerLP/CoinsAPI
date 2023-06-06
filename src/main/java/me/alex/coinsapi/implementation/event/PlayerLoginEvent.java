@@ -4,8 +4,6 @@ import dev.hypera.chameleon.Chameleon;
 import dev.hypera.chameleon.event.EventSubscriber;
 import dev.hypera.chameleon.event.EventSubscriptionPriority;
 import dev.hypera.chameleon.event.common.UserConnectEvent;
-import dev.hypera.chameleon.scheduler.Scheduler;
-import dev.hypera.chameleon.scheduler.Task;
 import dev.hypera.chameleon.user.User;
 import me.alex.coinsapi.api.CoinUser;
 import me.alex.coinsapi.api.CoinUserDAO;
@@ -20,12 +18,10 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
 
     private final Chameleon chameleon;
     private final CoinUserDAO dao;
-    private final Scheduler scheduler;
 
     public PlayerLoginEvent(CoinsAPI plugin) {
         this.chameleon = plugin.getChameleon();
         this.dao = plugin.getDatabase();
-        this.scheduler = chameleon.getScheduler();
 
         plugin.getChameleon().getEventBus().subscribe(this);
     }
@@ -34,24 +30,31 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
     public void on(@NotNull UserConnectEvent event) throws Exception {
         User user = event.getUser();
 
-        scheduler.schedule(Task.async(() -> {
-            Optional<CoinUser> coinUser = dao.getUser(user.getId());
+        System.out.println("User " + user.getName() + " connected");
+        /*CompletableFuture<Optional<CoinUser>> future = dao.getUserAsync(user.getId());
 
-            //Create user if needed
-            if (coinUser.isEmpty()) {
-                CoinUser newUser = new UserImpl(user.getId(), 0L, user.getName(), 0D);
-                dao.saveUser(newUser);
-            }
+        future.thenAccept(coinUser -> {
 
-            //Update name if needed
-            coinUser.ifPresent(coinUser1 -> {
-                UserImpl userImpl = (UserImpl) coinUser1;
-                if (!userImpl.getLastKnownName().equals(user.getName())) return;
+        });*/
+        //TODO: Kick user if error occurs
+        //TODO: Add Prefix
+        //TODO: Check Return value, if false kick and say try again later
+        Optional<CoinUser> optional = dao.getUser(user.getId());
+        if (optional.isEmpty()) {
+            CoinUser newUser = new UserImpl(user.getId(), 0L, user.getName(), 0D);
+            System.out.println(dao.saveUser(newUser));
+        }
+        System.out.println("User " + user.getName() + " loaded");
 
-                userImpl.setLastKnownName(user.getName());
-                dao.saveUser(userImpl);
-            });
-        }));
+        //Update name if needed
+        optional.ifPresent(coinUser1 -> {
+            System.out.println(coinUser1.getLastKnownName());
+            UserImpl userImpl = (UserImpl) coinUser1;
+            if (!userImpl.getLastKnownName().equals(user.getName())) return;
+
+            userImpl.setLastKnownName(user.getName());
+            System.out.println(dao.saveUser(userImpl));
+        });
     }
 
     @Override

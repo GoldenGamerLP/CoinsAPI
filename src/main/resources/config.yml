@@ -1,5 +1,5 @@
-mongodb_server: localhost
-mongodb_port: 27017
+mongodb_uri: localhost
 mongodb_database: mydb
 mongodb_collection: coins
 use_cache: true
+config-version: '1.1'

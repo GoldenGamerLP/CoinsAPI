@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import me.alex.coinsapi.implementation.CoinsAPI;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 
@@ -18,19 +19,21 @@ import java.nio.file.Path;
 public class DefaultConfiguration {
 
     private final Path path;
+    private final CoinsAPI plugin;
     @Getter
     private YamlDocument configuration;
 
     public DefaultConfiguration(CoinsAPI plugin) {
         Chameleon chameleon = plugin.getChameleon();
         this.path = chameleon.getDataFolder();
+        this.plugin = plugin;
     }
 
     public void load() {
         try {
             this.configuration = YamlDocument.create(
-                    path.resolve("config.yml").toFile()
-                    , DefaultConfiguration.class.getResourceAsStream("/config.yml"),
+                    new File(path.toFile(), "config.yml"),
+                    plugin.getClass().getResourceAsStream("/config.yml"),
                     GeneralSettings.DEFAULT,
                     getDefaultLoaderSettings(),
                     DumperSettings.DEFAULT,
