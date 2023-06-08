@@ -19,7 +19,7 @@
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/examination-string/1.3.0/6f34afef5c54ccce4996bc321abf77518b55b4bd/examination-string-1.3.0.jar" />
           <entry name="$USER_HOME$/.gradle/caches/modules-2/files-2.1/net.kyori/examination-api/1.3.0/8a2d185275307f1e2ef2adf7152b9a0d1d44c30b/examination-api-1.3.0.jar" />
         </processorPath>
-        <module name="CoinsAPI.main" />
+        <module name="me.alex.coinsapi.CoinsAPI.main" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="17" />

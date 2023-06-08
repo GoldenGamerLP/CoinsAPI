@@ -9,6 +9,13 @@ import java.util.function.Consumer;
 public interface CoinAPI {
 
     /**
+     * Gets the Cache of the CoinAPI
+     *
+     * @return CoinsUserCache
+     */
+    CoinsUserCache getCache();
+
+    /**
      * Directly gets the CoinUserDAO Instance
      *
      * @return CoinUserDAO

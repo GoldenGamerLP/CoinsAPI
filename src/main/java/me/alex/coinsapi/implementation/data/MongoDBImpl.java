@@ -9,19 +9,25 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import me.alex.coinsapi.api.CoinUser;
 import me.alex.coinsapi.api.CoinUserDAO;
+import me.alex.coinsapi.api.CoinsUserCache;
 import me.alex.coinsapi.implementation.CoinsAPI;
 import me.alex.coinsapi.implementation.utils.BsonUtils;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class MongoDBImpl implements CoinUserDAO {
+public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
 
     private final CoinsAPI plugin;
     private final MongoClientSettings settings;
+    private final Map<UUID, CoinUser> cache;
     private MongoClient client;
     private MongoCollection<Document> collection;
 
@@ -44,6 +50,7 @@ public class MongoDBImpl implements CoinUserDAO {
                 .uuidRepresentation(UuidRepresentation.STANDARD)
                 .build();
 
+        cache = new ConcurrentHashMap<>(8, 0.9f, 2);
     }
 
     @Override
@@ -76,25 +83,34 @@ public class MongoDBImpl implements CoinUserDAO {
         } else wasSuccessful = collection.replaceOne(
                 BsonUtils.filterForUUID(user.getUniqueId()),
                 BsonUtils.toBson(user)).getModifiedCount() == 1;
-
-        System.out.println("" + wasSuccessful + " " + user.getUniqueId() + exists);
         return wasSuccessful;
     }
 
     @Override
     public boolean deleteUser(CoinUser user) {
+        if (cache.get(user.getUniqueId()) != null) cache.remove(user.getUniqueId());
         return collection.deleteOne(BsonUtils.filterForUUID(user.getUniqueId())).wasAcknowledged();
     }
 
     @Override
     public Optional<CoinUser> getUser(UUID uuid) {
+        // If the user is cached, return it.
+        if (cache.containsKey(uuid)) return Optional.of(cache.get(uuid));
+
+        // If the user is not cached, check the database.
         Document document = collection.find(BsonUtils.filterForUUID(uuid)).first();
         if (document == null) return Optional.empty();
-        return Optional.of(BsonUtils.fromBson(document.toBsonDocument()));
+
+        CoinUser user = BsonUtils.fromBson(document.toBsonDocument());
+        return Optional.of(user);
     }
 
     @Override
     public Optional<CoinUser> getUser(String name) {
+        for (CoinUser user : cache.values()) {
+            if (user.getLastKnownName().equalsIgnoreCase(name)) return Optional.of(user);
+        }
+
         Document document = collection.find(BsonUtils.filterForName(name)).first();
         if (document == null) return Optional.empty();
         return Optional.of(BsonUtils.fromBson(document.toBsonDocument()));
@@ -117,6 +133,7 @@ public class MongoDBImpl implements CoinUserDAO {
 
     @Override
     public CompletableFuture<Optional<CoinUser>> getUserAsync(UUID uuid) {
+        //return if not cached async
         return CompletableFuture.supplyAsync(() -> getUser(uuid));
     }
 
@@ -125,4 +142,34 @@ public class MongoDBImpl implements CoinUserDAO {
         return CompletableFuture.supplyAsync(() -> getUser(name));
     }
 
+    @Override
+    public void invalidate(UUID uuid) {
+        // Remove the user from the cache. And save him
+        CoinUser user = cache.remove(uuid);
+        if (user != null) saveUser(user);
+    }
+
+    @Override
+    public boolean loadAll(List<UUID> uuids) {
+        AtomicInteger successCount = new AtomicInteger(0);
+
+        uuids.parallelStream().forEach(uuid -> {
+            Optional<CoinUser> user = getUser(uuid);
+            user.ifPresent(coinUser -> {
+                if (cache.put(uuid, coinUser) == null) {
+                    successCount.incrementAndGet();
+                }
+            });
+        });
+
+        return successCount.get() == uuids.size();
+    }
+
+    @Override
+    public void invalidateAll() {
+        // Save all users in the cache
+        cache.values().forEach(this::saveUser);
+        // Clear the cache
+        cache.clear();
+    }
 }

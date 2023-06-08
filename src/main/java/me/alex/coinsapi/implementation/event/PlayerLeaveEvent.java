@@ -4,31 +4,31 @@ import dev.hypera.chameleon.Chameleon;
 import dev.hypera.chameleon.event.EventSubscriber;
 import dev.hypera.chameleon.event.EventSubscriptionPriority;
 import dev.hypera.chameleon.event.common.UserDisconnectEvent;
+import me.alex.coinsapi.api.CoinsUserCache;
 import me.alex.coinsapi.implementation.CoinsAPI;
-import me.alex.coinsapi.implementation.data.UserCache;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class PlayerLeaveEvent implements EventSubscriber<UserDisconnectEvent> {
 
     private final Chameleon chameleon;
-    private final UserCache userCache;
+    private final CoinsUserCache userCache;
 
     public PlayerLeaveEvent(CoinsAPI plugin) {
         this.chameleon = plugin.getChameleon();
-        this.userCache = plugin.getUserCache();
+        this.userCache = plugin.getApi().getCache();
 
         plugin.getChameleon().getEventBus().subscribe(this);
     }
 
     @Override
     public void on(@NotNull UserDisconnectEvent event) throws Exception {
-        userCache.getCache().invalidate(event.getUser().getId());
+        userCache.invalidate(event.getUser().getId());
     }
 
     @Override
     public @NotNull EventSubscriptionPriority getPriority() {
-        return EventSubscriptionPriority.NORMAL;
+        return EventSubscriptionPriority.LAST;
     }
 
     @Override

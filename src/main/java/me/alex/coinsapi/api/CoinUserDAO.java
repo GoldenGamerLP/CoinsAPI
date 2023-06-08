@@ -39,7 +39,7 @@ public interface CoinUserDAO {
     boolean deleteUser(CoinUser user);
 
     /**
-     * Gets a user from the database
+     * Gets a user from the database.
      *
      * @param uuid the uuid of the user
      * @return the user if found
