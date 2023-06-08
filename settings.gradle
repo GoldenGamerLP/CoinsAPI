@@ -2,4 +2,5 @@ rootProject.name = 'CoinsAPI'
 include 'api'
 include 'main'
 include 'implementation'
+include 'CoinInterface'
 

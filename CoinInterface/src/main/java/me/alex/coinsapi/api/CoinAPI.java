@@ -3,9 +3,13 @@ package me.alex.coinsapi.api;
 import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * The main API class for the CoinsAPI. See example usage in the test folder.
+ */
 public interface CoinAPI {
 
     /**
@@ -33,8 +37,8 @@ public interface CoinAPI {
      */
     @Nullable
     @Blocking
-    default CoinUser getUser(UUID uuid) {
-        return getDatabase().getUser(uuid).orElse(null);
+    default Optional<CoinUser> getUser(UUID uuid) {
+        return getDatabase().getUser(uuid);
     }
 
     /**
@@ -88,7 +92,7 @@ public interface CoinAPI {
      * @param consumer The consumer to edit the user
      * @param uuid     The UUID of the player
      */
-    default void editUser(Consumer<CoinUser> consumer, UUID uuid) {
+    default void editUser(UUID uuid, Consumer<CoinUser> consumer) {
         getDatabase().getUserAsync(uuid).thenAccept(user -> {
             if (user.isPresent()) {
                 consumer.accept(user.get());

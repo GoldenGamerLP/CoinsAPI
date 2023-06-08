@@ -47,7 +47,7 @@ public interface CoinUser {
     void setMultiplier(double multiplier);
 
     /**
-     * Adds coins to the player. The multiplier will be applied. It uses <b>Math#round</b> to round the coins.
+     * Adds coins to the player. The multiplier will be applied. It uses {@link Math#round} to round the coins.
      *
      * @param coins The amount of coins
      */

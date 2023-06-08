@@ -46,6 +46,7 @@ public class CoinsAPI extends ChameleonPlugin {
     @Getter
     private CoinAPI api;
 
+
     public CoinsAPI(@NotNull Chameleon chameleon) {
         super(chameleon);
         this.chameleon = chameleon;
@@ -101,5 +102,9 @@ public class CoinsAPI extends ChameleonPlugin {
             }
         };
         CoinAPIProvider.setInstance(api);
+    }
+
+    public CoinsUserCache getCache() {
+        return database;
     }
 }

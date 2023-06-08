@@ -16,7 +16,7 @@ public class PlayerLeaveEvent implements EventSubscriber<UserDisconnectEvent> {
 
     public PlayerLeaveEvent(CoinsAPI plugin) {
         this.chameleon = plugin.getChameleon();
-        this.userCache = plugin.getApi().getCache();
+        this.userCache = plugin.getCache();
 
         plugin.getChameleon().getEventBus().subscribe(this);
     }

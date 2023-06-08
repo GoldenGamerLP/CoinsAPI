@@ -26,7 +26,7 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
     public PlayerLoginEvent(CoinsAPI plugin) {
         this.logger = plugin.getChameleon().getLogger();
         this.dao = plugin.getDatabase();
-        this.cache = plugin.getApi().getCache();
+        this.cache = plugin.getCache();
 
         plugin.getChameleon().getEventBus().subscribe(this);
     }
@@ -38,8 +38,9 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
         CompletableFuture<Optional<CoinUser>> future = dao.getUserAsync(user.getId());
         future.whenComplete((coinUser, throwable) -> {
             if (throwable != null) {
-                event.cancel(getErrorMessage());
-                logger.info("Error while getting user {} from database", user.getName(), throwable);
+                event.setCancelled(true, getErrorMessage());
+                logger.error("Error while getting user {0} from database", user.getName(), throwable);
+                throwable.printStackTrace();
                 return;
             }
 
@@ -53,6 +54,7 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
                 newUser = new UserImpl(user.getId(), 0L, user.getName(), 0D);
                 needSave = true;
             }
+            System.out.println("1" + isSuccess);
 
             if (coinUser.isPresent()) {
                 UserImpl userImpl = (UserImpl) coinUser.get();
@@ -61,16 +63,19 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
                     needSave = true;
                 }
             }
+            System.out.println("1" + isSuccess);
 
             if (needSave) {
                 isSuccess = dao.saveUser(newUser);
             }
 
+            System.out.println("1" + isSuccess);
             isSuccess = cache.load(user.getId());
 
+            System.out.println("1" + isSuccess);
             if (!isSuccess) {
-                event.cancel(getErrorMessage());
-                logger.info("Error while saving/editing/caching user {} to/from database", user.getName());
+                event.setCancelled(true, getErrorMessage());
+                logger.info("Error while saving/editing/caching user {0} to/from database", user.getName());
             }
         });
 
@@ -78,7 +83,7 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
 
     @Override
     public @NotNull EventSubscriptionPriority getPriority() {
-        return EventSubscriptionPriority.MEDIUM;
+        return EventSubscriptionPriority.HIGH;
     }
 
     @Override

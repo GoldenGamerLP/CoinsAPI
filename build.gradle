@@ -18,6 +18,7 @@ repositories {
 }
 
 dependencies {
+    implementation project(':CoinInterface')
     // Chameleon
     implementation platform('dev.hypera:chameleon-bom:0.15.0-SNAPSHOT')
     implementation 'dev.hypera:chameleon-api:0.15.0-SNAPSHOT'

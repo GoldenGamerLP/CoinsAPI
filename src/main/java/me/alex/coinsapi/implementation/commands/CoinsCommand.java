@@ -2,7 +2,6 @@ package me.alex.coinsapi.implementation.commands;
 
 import dev.hypera.chameleon.command.Command;
 import dev.hypera.chameleon.command.annotations.CommandHandler;
-import dev.hypera.chameleon.command.annotations.Permission;
 import dev.hypera.chameleon.command.context.Context;
 import me.alex.coinsapi.api.CoinUser;
 import me.alex.coinsapi.api.CoinUserDAO;
@@ -14,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-@Permission("coinsapi.command.coins")
+//@Permission("coinsapi.command.coins")
 @CommandHandler("coins|coin")
 public class CoinsCommand extends Command {
 

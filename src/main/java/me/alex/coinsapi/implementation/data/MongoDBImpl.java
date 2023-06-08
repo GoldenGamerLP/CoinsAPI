@@ -153,14 +153,13 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
     public boolean loadAll(List<UUID> uuids) {
         AtomicInteger successCount = new AtomicInteger(0);
 
-        uuids.parallelStream().forEach(uuid -> {
+        for (UUID uuid : uuids) {
             Optional<CoinUser> user = getUser(uuid);
-            user.ifPresent(coinUser -> {
-                if (cache.put(uuid, coinUser) == null) {
-                    successCount.incrementAndGet();
-                }
-            });
-        });
+            if (user.isPresent()) {
+                cache.put(uuid, user.get());
+                successCount.getAndIncrement();
+            }
+        }
 
         return successCount.get() == uuids.size();
     }

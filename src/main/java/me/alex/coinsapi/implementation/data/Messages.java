@@ -13,7 +13,7 @@ import java.util.ResourceBundle;
 public class Messages {
 
     public static final Component PREFIX = Component.empty()
-            .append(Component.text("Minesumo").color(TextColor.color(0xFF763B)))
+            .append(Component.text("Coins").color(TextColor.color(0xFF763B)))
             .append(Component.text(" | ").color(TextColor.color(0x434256)))
             .color(TextColor.color(0xA0AAA7));
 

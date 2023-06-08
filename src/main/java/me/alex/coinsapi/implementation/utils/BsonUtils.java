@@ -16,7 +16,7 @@ public class BsonUtils {
     //Convert CoinUser to BsonDocument
     public static Document toBson(@NotNull CoinUser user) {
         return new Document()
-                .append("uuid", user.getUniqueId())
+                .append("uuid", user.getUniqueId().toString())
                 .append("coins", user.getCoins())
                 .append("lastKnownName", user.getLastKnownName())
                 .append("multiplier", user.getMultiplier());
@@ -27,7 +27,7 @@ public class BsonUtils {
     @Contract("_ -> new")
     public static CoinUser fromBson(@NotNull BsonDocument document) {
         return new UserImpl(
-                document.get("uuid").asBinary().asUuid(),
+                UUID.fromString(document.get("uuid").asString().getValue()),
                 document.get("coins").asNumber().longValue(),
                 document.get("lastKnownName").asString().getValue(),
                 document.get("multiplier").asDouble().getValue());
@@ -36,7 +36,7 @@ public class BsonUtils {
     @NotNull
     @Contract(value = "_ -> new", pure = true)
     public static Bson filterForUUID(UUID uuid) {
-        return Filters.eq("uuid", uuid);
+        return Filters.eq("uuid", uuid.toString());
     }
 
     @NotNull
