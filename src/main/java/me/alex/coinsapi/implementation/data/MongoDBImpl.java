@@ -7,6 +7,7 @@ import com.mongodb.ServerApiVersion;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
+import lombok.extern.slf4j.Slf4j;
 import me.alex.coinsapi.api.CoinUser;
 import me.alex.coinsapi.api.CoinUserDAO;
 import me.alex.coinsapi.api.CoinsUserCache;
@@ -14,6 +15,7 @@ import me.alex.coinsapi.implementation.CoinsAPI;
 import me.alex.coinsapi.implementation.utils.BsonUtils;
 import org.bson.Document;
 import org.bson.UuidRepresentation;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -23,10 +25,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j(topic = "CoinsAPI")
+
 public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
 
     private final CoinsAPI plugin;
-    private final MongoClientSettings settings;
     private final Map<UUID, CoinUser> cache;
     private MongoClient client;
     private MongoCollection<Document> collection;
@@ -35,8 +38,15 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
     public MongoDBImpl(CoinsAPI plugin) {
         this.plugin = plugin;
 
+        cache = new ConcurrentHashMap<>(8, 0.9f, 2);
+    }
+
+    @NotNull
+    private MongoClientSettings getClientSettings(CoinsAPI plugin) {
+        final MongoClientSettings settings;
         ServerApi serverApi = ServerApi.builder()
                 .version(ServerApiVersion.V1)
+                .deprecationErrors(true)
                 .build();
 
         String uri = plugin
@@ -49,13 +59,17 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
                 .serverApi(serverApi)
                 .uuidRepresentation(UuidRepresentation.STANDARD)
                 .build();
-
-        cache = new ConcurrentHashMap<>(8, 0.9f, 2);
+        return settings;
     }
 
     @Override
     public void connect() {
-        client = MongoClients.create(settings);
+        try {
+            client = MongoClients.create(getClientSettings(plugin));
+        } catch (Exception e) {
+            log.error("Error while connecting to MongoDB:", e);
+            return;
+        }
 
         String coll = plugin
                 .getConfiguration()
@@ -73,6 +87,11 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
     @Override
     public void disconnect() {
         client.close();
+    }
+
+    @Override
+    public boolean isConnected() {
+        return client != null && client.getClusterDescription().isCompatibleWithDriver();
     }
 
     @Override

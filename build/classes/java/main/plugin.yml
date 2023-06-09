@@ -1,0 +1,10 @@
+api-version: '1.13'
+website: ''
+depend: []
+author: Alex
+name: CoinsAPI
+description: CoinsAPI
+main: me.alex.coinsapi.implementation.platform.bukkit.CoinsAPIBukkit
+softdepend: []
+version: '@version@'
+authors: [Alex]

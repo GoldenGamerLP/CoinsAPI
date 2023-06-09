@@ -3,8 +3,8 @@ package me.alex.coinsapi.implementation.event;
 import dev.hypera.chameleon.event.EventSubscriber;
 import dev.hypera.chameleon.event.EventSubscriptionPriority;
 import dev.hypera.chameleon.event.common.UserConnectEvent;
-import dev.hypera.chameleon.logger.ChameleonLogger;
 import dev.hypera.chameleon.user.User;
+import lombok.extern.slf4j.Slf4j;
 import me.alex.coinsapi.api.CoinUser;
 import me.alex.coinsapi.api.CoinUserDAO;
 import me.alex.coinsapi.api.CoinsUserCache;
@@ -18,13 +18,12 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+@Slf4j(topic = "CoinsAPI")
 public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
-    private final ChameleonLogger logger;
     private final CoinUserDAO dao;
     private final CoinsUserCache cache;
 
     public PlayerLoginEvent(CoinsAPI plugin) {
-        this.logger = plugin.getChameleon().getLogger();
         this.dao = plugin.getDatabase();
         this.cache = plugin.getCache();
 
@@ -38,9 +37,8 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
         CompletableFuture<Optional<CoinUser>> future = dao.getUserAsync(user.getId());
         future.whenComplete((coinUser, throwable) -> {
             if (throwable != null) {
-                event.setCancelled(true, getErrorMessage());
-                logger.error("Error while getting user {0} from database", user.getName(), throwable);
-                throwable.printStackTrace();
+                event.setCancelled(true, getErrorMessage(throwable.getLocalizedMessage()));
+                log.error("Error while getting user {} from database", user.getName(), throwable);
                 return;
             }
 
@@ -54,7 +52,6 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
                 newUser = new UserImpl(user.getId(), 0L, user.getName(), 0D);
                 needSave = true;
             }
-            System.out.println("1" + isSuccess);
 
             if (coinUser.isPresent()) {
                 UserImpl userImpl = (UserImpl) coinUser.get();
@@ -63,19 +60,16 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
                     needSave = true;
                 }
             }
-            System.out.println("1" + isSuccess);
 
             if (needSave) {
                 isSuccess = dao.saveUser(newUser);
             }
 
-            System.out.println("1" + isSuccess);
-            isSuccess = cache.load(user.getId());
+            isSuccess = cache.load(user.getId()) && isSuccess;
 
-            System.out.println("1" + isSuccess);
             if (!isSuccess) {
-                event.setCancelled(true, getErrorMessage());
-                logger.info("Error while saving/editing/caching user {0} to/from database", user.getName());
+                event.setCancelled(true, getErrorMessage("Error while caching user"));
+                log.warn("Error while caching user {}", user.getName());
             }
         });
 
@@ -91,7 +85,10 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
         return UserConnectEvent.class;
     }
 
-    private Component getErrorMessage() {
-        return Messages.PREFIX.append(Component.translatable("coinsapi.error"));
+
+    private Component getErrorMessage(String message) {
+        return Messages.PREFIX.append(Component
+                .translatable("coinsapi.error")
+                .args(Component.text(message)));
     }
 }

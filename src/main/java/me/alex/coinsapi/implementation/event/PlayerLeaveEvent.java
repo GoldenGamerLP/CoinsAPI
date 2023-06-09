@@ -1,6 +1,5 @@
 package me.alex.coinsapi.implementation.event;
 
-import dev.hypera.chameleon.Chameleon;
 import dev.hypera.chameleon.event.EventSubscriber;
 import dev.hypera.chameleon.event.EventSubscriptionPriority;
 import dev.hypera.chameleon.event.common.UserDisconnectEvent;
@@ -9,13 +8,13 @@ import me.alex.coinsapi.implementation.CoinsAPI;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.concurrent.CompletableFuture;
+
 public class PlayerLeaveEvent implements EventSubscriber<UserDisconnectEvent> {
 
-    private final Chameleon chameleon;
     private final CoinsUserCache userCache;
 
     public PlayerLeaveEvent(CoinsAPI plugin) {
-        this.chameleon = plugin.getChameleon();
         this.userCache = plugin.getCache();
 
         plugin.getChameleon().getEventBus().subscribe(this);
@@ -23,7 +22,7 @@ public class PlayerLeaveEvent implements EventSubscriber<UserDisconnectEvent> {
 
     @Override
     public void on(@NotNull UserDisconnectEvent event) throws Exception {
-        userCache.invalidate(event.getUser().getId());
+        CompletableFuture.runAsync(() -> userCache.invalidate(event.getUser().getId()));
     }
 
     @Override

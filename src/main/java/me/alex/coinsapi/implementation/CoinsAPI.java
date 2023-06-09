@@ -3,9 +3,9 @@ package me.alex.coinsapi.implementation;
 import dev.hypera.chameleon.Chameleon;
 import dev.hypera.chameleon.ChameleonPlugin;
 import dev.hypera.chameleon.annotations.Plugin;
-import dev.hypera.chameleon.logger.ChameleonLogger;
 import dev.hypera.chameleon.platform.Platform;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import me.alex.coinsapi.api.CoinAPI;
 import me.alex.coinsapi.api.CoinAPIProvider;
 import me.alex.coinsapi.api.CoinUserDAO;
@@ -31,6 +31,7 @@ import java.time.Instant;
                 Platform.VELOCITY,
                 Platform.MINESTOM
         })
+@Slf4j
 public class CoinsAPI extends ChameleonPlugin {
 
     @Getter
@@ -42,8 +43,6 @@ public class CoinsAPI extends ChameleonPlugin {
     @Getter
     private MongoDBImpl database;
     @Getter
-    private ChameleonLogger logger;
-    @Getter
     private CoinAPI api;
 
 
@@ -54,39 +53,39 @@ public class CoinsAPI extends ChameleonPlugin {
 
     @Override
     public void onLoad() {
-        this.logger = chameleon.getLogger();
-        logger.info("Loading Configuration...");
+        log.info("Loading Configuration...");
         this.configuration = new DefaultConfiguration(this);
         this.configuration.load();
-        logger.info("Configuration loaded! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
-        logger.info("Loading messages...");
+        log.info("Configuration loaded! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
+        log.info("Loading messages...");
         Messages.innit();
-        logger.info("Loaded messages! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
-        logger.info("Connecting to database...");
+        log.info("Loaded messages! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
+        log.info("Connecting to database...");
         this.database = new MongoDBImpl(this);
         this.database.connect();
-        logger.info("Connected to database! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
+        log.info("Connected to database! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
     }
 
     @Override
     public void onEnable() {
-        logger.info("Enabling CoinsAPI and registering events");
+        log.info("Enabling CoinsAPI and registering events");
         new PlayerLoginEvent(this);
         new PlayerLeaveEvent(this);
 
         chameleon.getCommandManager().register(new CoinsCommand(this));
 
-        logger.info("Initializing API");
+        log.info("Initializing API");
         initAPI();
-        logger.info("CoinsAPI enabled! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
+        log.info("CoinsAPI enabled! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
     }
 
     @Override
     public void onDisable() {
-        logger.info("Disabling CoinsAPI");
+        log.info("Disabling CoinsAPI");
         this.api.getCache().invalidateAll();
-        logger.info("Disconnected from database");
+        log.info("Disconnected from database");
         this.database.disconnect();
+        log.info("CoinsAPI disabled");
     }
 
     private void initAPI() {

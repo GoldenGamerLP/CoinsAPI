@@ -1,0 +1,7 @@
+depends: []
+author: Alex
+softDepends: []
+name: CoinsAPI
+description: CoinsAPI
+main: me.alex.coinsapi.implementation.platform.bungeecord.CoinsAPIBungeeCord
+version: '@version@'

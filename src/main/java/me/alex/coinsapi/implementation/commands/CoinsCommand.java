@@ -9,6 +9,7 @@ import me.alex.coinsapi.implementation.CoinsAPI;
 import me.alex.coinsapi.implementation.data.Messages;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -17,11 +18,9 @@ import java.util.concurrent.CompletableFuture;
 @CommandHandler("coins|coin")
 public class CoinsCommand extends Command {
 
-    private final CoinsAPI plugin;
     private final CoinUserDAO dao;
 
     public CoinsCommand(CoinsAPI plugin) {
-        this.plugin = plugin;
         this.dao = plugin.getDatabase();
     }
 
@@ -32,28 +31,73 @@ public class CoinsCommand extends Command {
             return;
         }
         switch (context.getArgs()[0]) {
-            case "help" -> helpCommand(context);
+            case "help", "hilfe" -> helpCommand(context);
             case "add" -> addCommand(context);
+            case "delete" -> deleteCommand(context);
             case "remove" -> removeCommand(context);
             case "set" -> setCommand(context);
-            case "get", "coins" -> getCommand(context);
+            case "get", "coins" -> {
+                String name = context.getArgs().length == 1 ? context.getSender().getName() : context.getArgs()[1];
+                getCommand(context, name);
+            }
+            default -> {
+                getCommand(context, context.getSender().getName());
+            }
         }
     }
 
-    private void getCommand(Context context) {
+    private void removeCommand(Context context) {
         String[] args = context.getArgs();
-        //the command is /coins get <player> and use early return
-        if (args.length < 1) {
+        //the command is /coins remove <player> [coins] and use early return
+        if (args.length < 2) {
             context.getSender().sendMessage(getErrorMessage());
             return;
         }
+        //Number
+        long value;
+        try {
+            value = Long.parseLong(args[2]);
+        } catch (NumberFormatException e) {
+            context.getSender().sendMessage(Messages.PREFIX
+                    .append(Component.translatable("coinsapi.error.notNumber")
+                            .args(Component.text(args[2]))));
+            return;
+        }
 
+        //User
         CompletableFuture<Optional<CoinUser>> user = dao.getUserAsync(args[1]);
         user.whenComplete((coinUser, throwable) -> {
-            if (throwable != null) {
-                context.getSender().sendMessage(getErrorMessage());
+            if (sendErrorMessage(context, throwable)) return;
+
+            if (coinUser.isEmpty()) {
+                context.getSender().sendMessage(Messages.PREFIX.append(Component.translatable("coinsapi.error.userNotFound")));
                 return;
             }
+
+            CoinUser user1 = coinUser.get();
+            long oldCoins = user1.getCoins();
+            user1.setCoins(oldCoins - value);
+            boolean success = dao.saveUser(user1);
+            if (!success) {
+                context.getSender().sendMessage(Messages.PREFIX.append(Component.translatable("coinsapi.error.save")));
+                return;
+            }
+            //Message: The user {user} had {oldCoins} and now has {newCoins}
+            context.getSender().sendMessage(Messages.PREFIX.append(Component.translatable("coinsapi.addCoins")
+                    .args(
+                            Component.text(user1.getLastKnownName()),
+                            Component.text(oldCoins),
+                            Component.text(user1.getCoins())))
+            );
+        });
+    }
+
+    private void getCommand(Context context, String player) {
+        //the command is /coins get <player> and use early return
+        CompletableFuture<Optional<CoinUser>> user = dao.getUserAsync(player);
+        user.whenComplete((coinUser, throwable) -> {
+            if (sendErrorMessage(context, throwable)) return;
+
             if (coinUser.isEmpty()) {
                 context.getSender().sendMessage(Messages.PREFIX.append(Component.translatable("coinsapi.error.userNotFound")));
                 return;
@@ -86,10 +130,8 @@ public class CoinsCommand extends Command {
         //Set the coins
         CompletableFuture<Optional<CoinUser>> user = dao.getUserAsync(args[1]);
         user.whenComplete((coinUser, throwable) -> {
-            if (throwable != null) {
-                context.getSender().sendMessage(getErrorMessage());
-                return;
-            }
+            if (sendErrorMessage(context, throwable)) return;
+
             if (coinUser.isEmpty()) {
                 context.getSender().sendMessage(Messages.PREFIX.append(Component.translatable("coinsapi.error.userNotFound")));
                 return;
@@ -113,7 +155,7 @@ public class CoinsCommand extends Command {
         });
     }
 
-    private void removeCommand(Context context) {
+    private void deleteCommand(Context context) {
         String[] args = context.getArgs();
         //the command is /coins delete <player> and use early return
         if (args.length < 2) {
@@ -122,10 +164,8 @@ public class CoinsCommand extends Command {
         }
         CompletableFuture<Optional<CoinUser>> user = dao.getUserAsync(args[1]);
         user.whenComplete((coinUser, throwable) -> {
-            if (throwable != null) {
-                context.getSender().sendMessage(getErrorMessage());
-                return;
-            }
+            if (sendErrorMessage(context, throwable)) return;
+
             if (coinUser.isEmpty()) {
                 context.getSender().sendMessage(Messages.PREFIX.append(Component.translatable("coinsapi.error.userNotFound")));
                 return;
@@ -160,10 +200,8 @@ public class CoinsCommand extends Command {
         }
         CompletableFuture<Optional<CoinUser>> user = dao.getUserAsync(args[1]);
         user.whenComplete((coinUser, throwable) -> {
-            if (throwable != null) {
-                context.getSender().sendMessage(getErrorMessage());
-                return;
-            }
+            if (sendErrorMessage(context, throwable)) return;
+
             if (coinUser.isEmpty()) {
                 context.getSender().sendMessage(Messages.PREFIX.append(Component.translatable("coinsapi.error.userNotFound")));
                 return;
@@ -196,5 +234,16 @@ public class CoinsCommand extends Command {
 
     private Component getErrorMessage() {
         return Messages.PREFIX.append(Component.translatable("coinsapi.error.moreArgs"));
+    }
+
+    private boolean sendErrorMessage(Context context, @Nullable Throwable e) {
+        boolean is = e != null;
+        if (is) {
+            String shortMessage = e.getStackTrace()[0].toString();
+            context.getSender().sendMessage(Messages.PREFIX.append(Component
+                    .translatable("coinsapi.error")
+                    .args(Component.text(shortMessage))));
+        }
+        return is;
     }
 }

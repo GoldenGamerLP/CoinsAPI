@@ -21,6 +21,13 @@ public interface CoinUserDAO {
     void disconnect();
 
     /**
+     * Checks if the database is connected
+     *
+     * @return true if the database is connected
+     */
+    boolean isConnected();
+
+    /**
      * Saves a user to the database
      *
      * @param user the user to save

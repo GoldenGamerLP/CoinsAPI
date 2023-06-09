@@ -1,0 +1,12 @@
+{
+  "id": "coinsapi",
+  "name": "CoinsAPI",
+  "version": "@version@",
+  "description": "CoinsAPI",
+  "url": "",
+  "authors": [
+    "Alex"
+  ],
+  "dependencies": [],
+  "main": "me.alex.coinsapi.implementation.platform.velocity.CoinsAPIVelocity"
+}
