@@ -21,7 +21,7 @@ public class PlayerLeaveEvent implements EventSubscriber<UserDisconnectEvent> {
     }
 
     @Override
-    public void on(@NotNull UserDisconnectEvent event) throws Exception {
+    public void on(@NotNull UserDisconnectEvent event) {
         CompletableFuture.runAsync(() -> userCache.invalidate(event.getUser().getId()));
     }
 

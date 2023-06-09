@@ -31,7 +31,7 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
     }
 
     @Override
-    public void on(@NotNull UserConnectEvent event) throws Exception {
+    public void on(@NotNull UserConnectEvent event) {
         User user = event.getUser();
 
         CompletableFuture<Optional<CoinUser>> future = dao.getUserAsync(user.getId());

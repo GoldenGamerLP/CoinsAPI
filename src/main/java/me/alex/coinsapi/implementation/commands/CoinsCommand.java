@@ -40,9 +40,7 @@ public class CoinsCommand extends Command {
                 String name = context.getArgs().length == 1 ? context.getSender().getName() : context.getArgs()[1];
                 getCommand(context, name);
             }
-            default -> {
-                getCommand(context, context.getSender().getName());
-            }
+            default -> getCommand(context, context.getSender().getName());
         }
     }
 
