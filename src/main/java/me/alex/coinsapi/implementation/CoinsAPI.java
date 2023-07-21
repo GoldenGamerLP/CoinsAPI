@@ -5,7 +5,6 @@ import dev.hypera.chameleon.ChameleonPlugin;
 import dev.hypera.chameleon.annotations.Plugin;
 import dev.hypera.chameleon.platform.Platform;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import me.alex.coinsapi.api.CoinAPI;
 import me.alex.coinsapi.api.CoinAPIProvider;
 import me.alex.coinsapi.api.CoinUserDAO;
@@ -13,12 +12,18 @@ import me.alex.coinsapi.api.CoinsUserCache;
 import me.alex.coinsapi.implementation.commands.CoinsCommand;
 import me.alex.coinsapi.implementation.data.Messages;
 import me.alex.coinsapi.implementation.data.MongoDBImpl;
+import me.alex.coinsapi.implementation.data.configuration.CoinAPIConfig;
 import me.alex.coinsapi.implementation.data.configuration.DefaultConfiguration;
 import me.alex.coinsapi.implementation.event.PlayerLeaveEvent;
 import me.alex.coinsapi.implementation.event.PlayerLoginEvent;
+import me.alex.coinsapi.implementation.threads.CoinsExecutor;
+import net.http.aeon.Aeon;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.concurrent.CompletableFuture;
 
 @Plugin(id = "coinsapi",
         name = "CoinsAPI",
@@ -31,19 +36,17 @@ import java.time.Instant;
                 Platform.VELOCITY,
                 Platform.MINESTOM
         })
-@Slf4j
+@Getter
 public class CoinsAPI extends ChameleonPlugin {
 
-    @Getter
-    private final Instant start = Instant.now();
-    @Getter
-    private Chameleon chameleon;
-    @Getter
+    private Instant start = Instant.now();
+    private final Logger logger = LoggerFactory.getLogger(CoinsAPI.class);
+    private final Chameleon chameleon;
     private DefaultConfiguration configuration;
-    @Getter
     private MongoDBImpl database;
-    @Getter
     private CoinAPI api;
+    private CoinsExecutor executor;
+    private CoinAPIConfig config;
 
 
     public CoinsAPI(@NotNull Chameleon chameleon) {
@@ -53,39 +56,39 @@ public class CoinsAPI extends ChameleonPlugin {
 
     @Override
     public void onLoad() {
-        log.info("Loading Configuration...");
-        this.configuration = new DefaultConfiguration(this);
-        this.configuration.load();
-        log.info("Configuration loaded! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
-        log.info("Loading messages...");
-        Messages.innit();
-        log.info("Loaded messages! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
-        log.info("Connecting to database...");
-        this.database = new MongoDBImpl(this);
-        this.database.connect();
-        log.info("Connected to database! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
+        logger.info("CoinsAPI loading...");
+        //None depended initializations
+        this.config = Aeon.insert(new CoinAPIConfig(),this.chameleon.getDataFolder());
+        this.executor = new CoinsExecutor(this);
+        logger.info("Loaded CoinsAPI! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
     }
 
     @Override
     public void onEnable() {
-        log.info("Enabling CoinsAPI and registering events");
+        start = Instant.now();
+        logger.info("CoinsAPI enabling...");
+        this.database = new MongoDBImpl(this);
         new PlayerLoginEvent(this);
         new PlayerLeaveEvent(this);
 
-        chameleon.getCommandManager().register(new CoinsCommand(this));
+        //Simultaneous initializations
+        initAsync();
 
-        log.info("Initializing API");
+        boolean isCommandsEnabled = getConfig().getCommands_enabled();
+        if (isCommandsEnabled) chameleon.getCommandManager().register(new CoinsCommand(this));
+
+        //Dont put this async because of dependencies and other plugins
         initAPI();
-        log.info("CoinsAPI enabled! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
+        logger.info("CoinsAPI Enabled! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
     }
 
     @Override
     public void onDisable() {
-        log.info("Disabling CoinsAPI");
+        logger.info("Disabling CoinsAPI");
         this.api.getCache().invalidateAll();
-        log.info("Disconnected from database");
+        logger.info("Disconnected from database");
         this.database.disconnect();
-        log.info("CoinsAPI disabled");
+        logger.info("CoinsAPI disabled");
     }
 
     private void initAPI() {
@@ -101,6 +104,18 @@ public class CoinsAPI extends ChameleonPlugin {
             }
         };
         CoinAPIProvider.setInstance(api);
+    }
+
+    private void initAsync() {
+        CompletableFuture<Void> message = CompletableFuture.runAsync(() -> Messages.innit(this), executor.getExecutor());
+        CompletableFuture<Void> database = CompletableFuture.runAsync(() -> this.database.connect(), executor.getExecutor());
+        CompletableFuture.allOf(message,database).whenComplete((unused, throwable) -> {
+           if(throwable != null) {
+               logger.error("An error occurred while initializing CoinsAPI",throwable);
+               return;
+           }
+            logger.info("CoinsAPI initialized! Took " + (Instant.now().toEpochMilli() - start.toEpochMilli()) + "ms");
+        });
     }
 
     public CoinsUserCache getCache() {

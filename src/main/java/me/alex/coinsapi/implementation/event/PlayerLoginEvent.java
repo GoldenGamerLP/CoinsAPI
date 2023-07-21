@@ -17,15 +17,18 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Slf4j(topic = "CoinsAPI")
 public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
     private final CoinUserDAO dao;
     private final CoinsUserCache cache;
+    private final Executor executor;
 
     public PlayerLoginEvent(CoinsAPI plugin) {
         this.dao = plugin.getDatabase();
         this.cache = plugin.getCache();
+        this.executor = plugin.getExecutor().getExecutor();
 
         plugin.getChameleon().getEventBus().subscribe(this);
     }
@@ -34,8 +37,13 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
     public void on(@NotNull UserConnectEvent event) {
         User user = event.getUser();
 
+        if(!dao.isConnected()) {
+            event.setCancelled(true, getErrorMessage("Error while connecting to database"));
+            return;
+        }
+
         CompletableFuture<Optional<CoinUser>> future = dao.getUserAsync(user.getId());
-        future.whenComplete((coinUser, throwable) -> {
+        future.whenCompleteAsync((coinUser, throwable) -> {
             if (throwable != null) {
                 event.setCancelled(true, getErrorMessage(throwable.getLocalizedMessage()));
                 log.error("Error while getting user {} from database", user.getName(), throwable);
@@ -71,7 +79,7 @@ public class PlayerLoginEvent implements EventSubscriber<UserConnectEvent> {
                 event.setCancelled(true, getErrorMessage("Error while caching user"));
                 log.warn("Error while caching user {}", user.getName());
             }
-        });
+        },executor);
 
     }
 

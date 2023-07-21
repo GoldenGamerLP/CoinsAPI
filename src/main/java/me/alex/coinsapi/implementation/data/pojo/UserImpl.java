@@ -12,6 +12,7 @@ public class UserImpl implements CoinUser {
     private final UUID uuid;
     private volatile Long coins;
     private String lastKnownName;
+    private long lastSaved;
     @Getter
     private volatile double multiplier;
 
@@ -20,6 +21,7 @@ public class UserImpl implements CoinUser {
         this.coins = coins;
         this.lastKnownName = lastKnownName;
         this.multiplier = multiplier;
+        this.lastSaved = System.currentTimeMillis();
     }
 
     @Override
@@ -38,13 +40,17 @@ public class UserImpl implements CoinUser {
     }
 
     @Override
-    public void addCoins(Long coins) {
-        this.coins += Math.round(coins * multiplier);
+    public long addCoins(Long coins) {
+        long multi = Math.round(coins * multiplier);
+        this.coins += multi;
+        return multi;
     }
 
     @Override
-    public void removeCoins(Long coins) {
+    public boolean removeCoins(Long coins) {
+        if (!hasEnoughCoins(coins)) return false;
         this.coins -= coins;
+        return true;
     }
 
     @Override
@@ -54,5 +60,23 @@ public class UserImpl implements CoinUser {
 
     public void setLastKnownName(String lastKnownName) {
         this.lastKnownName = lastKnownName;
+    }
+
+    @Override
+    public boolean hasMultiplier() {
+        return multiplier != 1;
+    }
+
+    @Override
+    public boolean hasEnoughCoins(Long coins) {
+        return this.coins >= coins;
+    }
+
+    public long getLastSaved() {
+        return lastSaved;
+    }
+
+    public void setLastSaved(long lastSaved) {
+        this.lastSaved = lastSaved;
     }
 }

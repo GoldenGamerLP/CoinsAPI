@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/CoinsAPI.main.iml" filepath="$PROJECT_DIR$/.idea/modules/CoinsAPI.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/CoinsAPI.test.iml" filepath="$PROJECT_DIR$/.idea/modules/CoinsAPI.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/Develop.workspace.CoinsAPI.main.iml" filepath="$PROJECT_DIR$/.idea/modules/Develop.workspace.CoinsAPI.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/me.alex.coinsapi.CoinsAPI.main.iml" filepath="$PROJECT_DIR$/.idea/modules/me.alex.coinsapi.CoinsAPI.main.iml" />
     </modules>
   </component>

@@ -33,6 +33,13 @@ public interface CoinUser {
     String getLastKnownName();
 
     /**
+     * Sets the last known name of the player
+     *
+     * @param lastKnownName The last known name
+     */
+    void setLastKnownName(String lastKnownName);
+
+    /**
      * Gets the multiplier of the player
      *
      * @return double
@@ -50,13 +57,44 @@ public interface CoinUser {
      * Adds coins to the player. The multiplier will be applied. It uses {@link Math#round} to round the coins.
      *
      * @param coins The amount of coins
+     * @return The amount of coins that were added
      */
-    void addCoins(Long coins);
+    long addCoins(Long coins);
 
     /**
      * Removes coins from the player
      *
      * @param coins The amount of coins
+     * @return boolean if the player has enough coins
      */
-    void removeCoins(Long coins);
+    boolean removeCoins(Long coins);
+
+    /**
+     * Checks if the player has a multiplier.
+     *
+     * @return boolean
+     */
+    boolean hasMultiplier();
+
+    /**
+     * Checks if the player has enough coins.
+     *
+     * @param coins The amount of coins
+     * @return boolean
+     */
+    boolean hasEnoughCoins(Long coins);
+
+    /**
+     * Gets the last saved time of the player
+     *
+     * @return long
+     */
+    long getLastSaved();
+
+    /**
+     * Sets the last saved time of the player
+     *
+     * @param lastSaved The last saved time
+     */
+    void setLastSaved(long lastSaved);
 }

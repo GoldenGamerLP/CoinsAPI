@@ -1,5 +1,7 @@
 package me.alex.coinsapi.implementation.data;
 
+import dev.hypera.chameleon.Chameleon;
+import me.alex.coinsapi.implementation.CoinsAPI;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
@@ -24,11 +26,9 @@ public class Messages {
     };
     private static boolean isRegistered = false;
 
-    public static void innit() {
+    public static void innit(CoinsAPI plugin) {
         if (isRegistered) throw new RuntimeException("You cannot register messages twice.");
         isRegistered = true;
-
-        MinestomAdventure.AUTOMATIC_COMPONENT_TRANSLATION = true;
 
         GlobalTranslator globalTranslator = GlobalTranslator.translator();
         TranslationRegistry registry = TranslationRegistry.create(Key.key("coins", "messages"));
@@ -39,5 +39,17 @@ public class Messages {
         }
 
         globalTranslator.addSource(registry);
+
+        enabledComponentTranslation(plugin);
+    }
+
+    private static void enabledComponentTranslation(CoinsAPI plugin) {
+        Chameleon chameleon = plugin.getChameleon();
+        switch (chameleon.getPlatform().getName()) {
+            case "Minestom" -> MinestomAdventure.AUTOMATIC_COMPONENT_TRANSLATION = true;
+            default ->  plugin.getLogger().warn(
+                    "Automatic component translation may not be supported on this platform." +
+                    "Report issues to the developer.");
+        }
     }
 }

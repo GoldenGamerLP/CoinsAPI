@@ -9,20 +9,22 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 public class PlayerLeaveEvent implements EventSubscriber<UserDisconnectEvent> {
 
     private final CoinsUserCache userCache;
+    private final Executor executor;
 
     public PlayerLeaveEvent(CoinsAPI plugin) {
         this.userCache = plugin.getCache();
-
+        this.executor = plugin.getExecutor().getExecutor();
         plugin.getChameleon().getEventBus().subscribe(this);
     }
 
     @Override
     public void on(@NotNull UserDisconnectEvent event) {
-        CompletableFuture.runAsync(() -> userCache.invalidate(event.getUser().getId()));
+        CompletableFuture.runAsync(() -> userCache.invalidate(event.getUser().getId()), executor);
     }
 
     @Override

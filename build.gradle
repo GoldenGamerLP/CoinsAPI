@@ -32,6 +32,8 @@ dependencies {
 
     // Configuration
     implementation 'dev.dejvokep:boosted-yaml:1.3'
+    //aeon
+    implementation 'com.github.HttpMarco:Aeon:-SNAPSHOT'
 
     //Lombok getter/setter
     compileOnly 'org.projectlombok:lombok:1.18.28'

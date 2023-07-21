@@ -3,6 +3,7 @@ package me.alex.coinsapi.implementation.commands;
 import dev.hypera.chameleon.command.Command;
 import dev.hypera.chameleon.command.annotations.CommandHandler;
 import dev.hypera.chameleon.command.context.Context;
+import dev.hypera.chameleon.user.User;
 import me.alex.coinsapi.api.CoinUser;
 import me.alex.coinsapi.api.CoinUserDAO;
 import me.alex.coinsapi.implementation.CoinsAPI;
@@ -27,7 +28,11 @@ public class CoinsCommand extends Command {
     @Override
     public void execute(@NotNull Context context) {
         if (context.getArgs().length == 0) {
-            helpCommand(context);
+            if(context.getSender() instanceof User user) {
+                getCommand(context, user.getName());
+            } else {
+                context.getSender().sendMessage(getErrorMessage());
+            }
             return;
         }
         switch (context.getArgs()[0]) {
@@ -40,7 +45,7 @@ public class CoinsCommand extends Command {
                 String name = context.getArgs().length == 1 ? context.getSender().getName() : context.getArgs()[1];
                 getCommand(context, name);
             }
-            default -> getCommand(context, context.getSender().getName());
+            default -> helpCommand(context);
         }
     }
 

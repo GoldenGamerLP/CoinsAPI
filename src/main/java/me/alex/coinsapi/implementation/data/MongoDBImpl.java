@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j(topic = "CoinsAPI")
@@ -33,12 +34,13 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
     private final Map<UUID, CoinUser> cache;
     private MongoClient client;
     private MongoCollection<Document> collection;
+    private final Executor executor;
 
 
     public MongoDBImpl(CoinsAPI plugin) {
         this.plugin = plugin;
-
-        cache = new ConcurrentHashMap<>(8, 0.9f, 2);
+        this.executor = plugin.getExecutor().getExecutor();
+        this.cache = new ConcurrentHashMap<>();
     }
 
     @NotNull
@@ -49,10 +51,7 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
                 .deprecationErrors(true)
                 .build();
 
-        String uri = plugin
-                .getConfiguration()
-                .getConfiguration()
-                .getString("mongodb_uri");
+        String uri = plugin.getConfig().getDatabase_mongodb_uri();
 
         settings = MongoClientSettings.builder()
                 .applyConnectionString(new ConnectionString(uri))
@@ -72,16 +71,14 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
         }
 
         String coll = plugin
-                .getConfiguration()
-                .getConfiguration()
-                .getString("mongodb_collection");
+                .getConfig().getDatabase_mongodb_collection();
 
         String database = plugin
-                .getConfiguration()
-                .getConfiguration()
-                .getString("mongodb_database");
+                .getConfig().getDatabase_mongodb_database();
 
         collection = client.getDatabase(database).getCollection(coll);
+        if (isConnected()) log.info("Successfully connected to MongoDB!");
+        else log.error("Failed to connect to MongoDB!");
     }
 
     @Override
@@ -96,12 +93,25 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
 
     @Override
     public boolean saveUser(CoinUser user) {
-        boolean exists = hasUser(user.getUniqueId()), wasSuccessful;
+        boolean exists = hasUser(user.getUniqueId()), wasSuccessful = false;
         if (!exists) {
-            wasSuccessful = collection.insertOne(BsonUtils.toBson(user)).getInsertedId() != null;
-        } else wasSuccessful = collection.replaceOne(
-                BsonUtils.filterForUUID(user.getUniqueId()),
-                BsonUtils.toBson(user)).getModifiedCount() == 1;
+            wasSuccessful = collection.insertOne(BsonUtils.toBson(user)).wasAcknowledged();
+        }
+
+        CoinUser oldUser = getUser(user.getUniqueId()).orElse(null);
+        boolean shouldOverride = oldUser.getLastSaved() < user.getLastSaved();
+        if(shouldOverride) {
+            user.setCoins(oldUser.getCoins());
+            user.setLastKnownName(oldUser.getLastKnownName());
+            user.setMultiplier(oldUser.getMultiplier());
+            user.setLastSaved(oldUser.getLastSaved());
+
+            wasSuccessful = collection.replaceOne(
+                    BsonUtils.filterForUUID(user.getUniqueId()),
+                    BsonUtils.toBson(user))
+                    .wasAcknowledged();
+        } else user.setLastSaved(System.currentTimeMillis());
+
         return wasSuccessful;
     }
 
@@ -121,6 +131,8 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
         if (document == null) return Optional.empty();
 
         CoinUser user = BsonUtils.fromBson(document.toBsonDocument());
+        user.setLastSaved(System.currentTimeMillis());
+
         return Optional.of(user);
     }
 
@@ -142,23 +154,23 @@ public class MongoDBImpl implements CoinUserDAO, CoinsUserCache {
 
     @Override
     public CompletableFuture<Boolean> saveUserAsync(CoinUser user) {
-        return CompletableFuture.supplyAsync(() -> saveUser(user));
+        return CompletableFuture.supplyAsync(() -> saveUser(user), executor);
     }
 
     @Override
     public CompletableFuture<Boolean> deleteUserAsync(CoinUser user) {
-        return CompletableFuture.supplyAsync(() -> deleteUser(user));
+        return CompletableFuture.supplyAsync(() -> deleteUser(user), executor);
     }
 
     @Override
     public CompletableFuture<Optional<CoinUser>> getUserAsync(UUID uuid) {
         //return if not cached async
-        return CompletableFuture.supplyAsync(() -> getUser(uuid));
+        return CompletableFuture.supplyAsync(() -> getUser(uuid), executor);
     }
 
     @Override
     public CompletableFuture<Optional<CoinUser>> getUserAsync(String name) {
-        return CompletableFuture.supplyAsync(() -> getUser(name));
+        return CompletableFuture.supplyAsync(() -> getUser(name), executor);
     }
 
     @Override

@@ -56,6 +56,7 @@ public class DefaultConfiguration {
         return UpdaterSettings.builder()
                 .setAutoSave(true)
                 .setVersioning(new BasicVersioning("config-version"))
+                .setEnableDowngrading(true)
                 .build();
     }
 
@@ -64,6 +65,7 @@ public class DefaultConfiguration {
                 .setAutoUpdate(true)
                 .setDetailedErrors(true)
                 .setCreateFileIfAbsent(true)
+                .setErrorLabel("Failed to load configuration file")
                 .build();
     }
 }
